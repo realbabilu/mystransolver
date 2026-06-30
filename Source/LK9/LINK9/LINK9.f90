@@ -45,17 +45,17 @@
                                          L2J_MSG, L2R_MSG, L2S_MSG, L5A_MSG, L5B_MSG, NEU_MSG, PCH_MSG,                            &
                                          OT4_MSG, OU4_MSG, OT4_GRD_OTM, OT4_ELM_OTM, OU4_GRD_OTM, OU4_ELM_OTM
 
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, CC_ENTRY_LEN, COMM, IBIT, INT_EIG_NUM, INT_SC_NUM, JTSUB, FATAL_ERR,          &
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, CC_ENTRY_LEN, COMM, IBIT, INT_SC_NUM, JTSUB, FATAL_ERR,                     &
                                          FEMAP_VERSION, LINKNO, MBUG,                                                              &
                                          NDOFF, NDOFG, NDOFL, NDOFM, NDOFN, ndofo, NDOFR, NDOFS, NDOFSA, NGRID, NSUB, NVEC,        &
                                          NTERM_IF_LTM, NTERM_GMN, NTERM_HMN, NTERM_KFS, NTERM_KFSD, NTERM_LMN, NTERM_MFS,          &
                                          NTERM_MGG, NTERM_MLL,NTERM_PG, NTERM_PM, NTERM_PS, NTERM_QSYS,                            &
-                                         NUM_BUCKLING_SUBS, NUM_CB_DOFS, NUM_EIGENS,                                                          &
+                                         NUM_CB_DOFS, NUM_EIGENS,                                                                  &
                                          NROWS_OTM_ACCE, NROWS_OTM_DISP, NROWS_OTM_MPCF, NROWS_OTM_SPCF,                           &
                                          NROWS_OTM_ELFE, NROWS_OTM_ELFN, NROWS_OTM_STRE, NROWS_OTM_STRN,                           &
                                          NROWS_TXT_ACCE, NROWS_TXT_DISP, NROWS_TXT_MPCF, NROWS_TXT_SPCF,                           &
-                                         NROWS_TXT_ELFE, NROWS_TXT_ELFN, NROWS_TXT_STRE, NROWS_TXT_STRN, RESTART, SOL_NAME, WARN_ERR, &
-                                         MODE_SUBCASE
+                                         NROWS_TXT_ELFE, NROWS_TXT_ELFN, NROWS_TXT_STRE, NROWS_TXT_STRN, RESTART, SOL_NAME, WARN_ERR	
+      USE SCONTR, ONLY                :  INT_EIG_NUM, NUM_BUCKLING_SUBS,MODE_SUBCASE
 
       USE SCONTR, ONLY                :  GROUT_ACCE_BIT, GROUT_DISP_BIT, GROUT_OLOA_BIT, GROUT_SPCF_BIT, GROUT_MPCF_BIT,           &
                                          GROUT_GPFO_BIT, ELOUT_ELFN_BIT, ELOUT_ELFE_BIT, ELOUT_STRE_BIT, ELOUT_STRN_BIT,           &
@@ -196,28 +196,28 @@
       !IF (PRTNEU == 'Y') THEN
       !   DEBUG(200) = 1
       !ENDIF
-      ! IF (PRTF06 == 'Y') THEN
-      !    DISP_OUT(1:1) = 'Y'  ! f06
-      !    ACCE_OUT(2:2) = 'Y'
-      !    OLOA_OUT(1:1) = 'Y'
-      !    SPCF_OUT(1:1) = 'Y'
-      !    MPCF_OUT(1:1) = 'Y'
-      !    STRE_OUT(1:1) = 'Y'
-      !    STRN_OUT(1:1) = 'Y'
-      !    FORC_OUT(1:1) = 'Y'
-      !    GPFO_OUT(1:1) = 'Y'
-      ! ENDIF
-      ! IF (PRTOP2 == 'Y') THEN
-      !    DISP_OUT(2:2) = 'Y'  ! op2
-      !    ACCE_OUT(2:2) = 'Y'
-      !    OLOA_OUT(2:2) = 'Y'
-      !    SPCF_OUT(2:2) = 'Y'
-      !    MPCF_OUT(2:2) = 'Y'
-      !    STRE_OUT(2:2) = 'Y'
-      !    STRN_OUT(2:2) = 'Y'
-      !    FORC_OUT(2:2) = 'Y'
-      !    GPFO_OUT(2:2) = 'Y'
-      ! ENDIF
+      IF (PRTF06 == 'Y') THEN
+         DISP_OUT(1:1) = 'Y'  ! f06
+         ACCE_OUT(2:2) = 'Y'
+         OLOA_OUT(1:1) = 'Y'
+         SPCF_OUT(1:1) = 'Y'
+         MPCF_OUT(1:1) = 'Y'
+         STRE_OUT(1:1) = 'Y'
+         STRN_OUT(1:1) = 'Y'
+         FORC_OUT(1:1) = 'Y'
+         GPFO_OUT(1:1) = 'Y'
+      ENDIF
+      IF (PRTOP2 == 'Y') THEN
+         DISP_OUT(2:2) = 'Y'  ! op2
+         ACCE_OUT(2:2) = 'Y'
+         OLOA_OUT(2:2) = 'Y'
+         SPCF_OUT(2:2) = 'Y'
+         MPCF_OUT(2:2) = 'Y'
+         STRE_OUT(2:2) = 'Y'
+         STRN_OUT(2:2) = 'Y'
+         FORC_OUT(2:2) = 'Y'
+         GPFO_OUT(2:2) = 'Y'
+      ENDIF
       !DISP_OUT(3:3) = 'Y'  ! pch
       !------------------------------------------------------------------------
 
@@ -229,9 +229,9 @@
       OUNT(1) = ERR
       OUNT(2) = F06
 
-      WRITE_F06 = DISP_OUT%WRITE_F06
-      WRITE_OP2 = DISP_OUT%WRITE_OP2
-      WRITE_PCH = DISP_OUT%WRITE_PCH
+      WRITE_F06 = (DISP_OUT(1:1) == 'Y')
+      WRITE_OP2 = (DISP_OUT(2:2) == 'Y')
+      WRITE_PCH = (DISP_OUT(3:3) == 'Y')
       IF (WRITE_PCH) THEN
          INQUIRE (FILE=PCHFIL, OPENED=LOPEN)
          IF (.NOT.LOPEN) THEN                          ! Otherwise we assume it is positioned at its end and ready for write
@@ -598,7 +598,6 @@
          NUM_SOLNS = NSUB
 
       ELSE IF (SOL_NAME(1:8) == 'BUCKLING') THEN
-
          IF (LOAD_ISTEP == 1) THEN
             NUM_SOLNS = NSUB - NUM_BUCKLING_SUBS  ! all static preload subcases
 
@@ -674,6 +673,8 @@ j_do: DO JVEC=1,NUM_SOLNS
             FEMAP_SET_ID = SCNUM(JVEC)
 
          ELSE IF (SOL_NAME(1: 8) == 'BUCKLING') THEN
+!            INT_SC_NUM   = LK9_PROC_NUM
+!            FEMAP_SET_ID = LK9_PROC_NUM
             IF (LOAD_ISTEP == 2) THEN
                ! Each eigenvector is attributed to its owning buckling subcase via MODE_SUBCASE (same as MODES)
                INT_SC_NUM = 1
@@ -690,7 +691,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ELSE IF (SOL_NAME(1: 5) == 'MODES') THEN
             ! Each mode is attributed to its owning subcase via MODE_SUBCASE (populated in LINK4). For legacy single-METHOD
             ! decks MODE_SUBCASE is uniformly the canonical subcase, so behaviour matches the original INT_SC_NUM=1 fallback.
-            INT_SC_NUM = 1
+            INT_SC_NUM   = 1
             IF (ALLOCATED(MODE_SUBCASE)) THEN
                IF (JVEC <= SIZE(MODE_SUBCASE)) INT_SC_NUM = MODE_SUBCASE(JVEC)
             ENDIF
@@ -741,7 +742,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
             JTSUB = 1                                      ! eigenvectors: buckling subcases carry no thermal loads
             ! INT_SC_NUM was already set correctly in the j_do init block above; do not override
-         ELSE
+          ELSE
             IF (SUBLOD(INT_SC_NUM,2) > 0) THEN                ! JTSUB must only be used in the subrs called if this SUBLOD > 0
                JTSUB = JTSUB + 1
             ENDIF
@@ -975,7 +976,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          SC_STRN_OUTPUT = IAND(OELOUT(INT_SC_NUM),IBIT(ELOUT_STRN_BIT))
          IF((SC_ELFE_OUTPUT > 0) .OR. (SC_ELFN_OUTPUT > 0) .OR. (SC_STRE_OUTPUT > 0) .OR. (SC_STRN_OUTPUT > 0) .OR.                &
             ! (ANY_U_P_OUTPUT > 0) .OR.
-            (WRITE_NEU)) THEN
+            (WRITE_NEU)) THEN 
             CALL LINK_MESSAGE_I('PROCESS ELEM FORCE/STRESS REQUESTS,               "',JVEC)
             IF ((DEBUG(176) == 0) .AND. (JVEC == 1)) THEN
                WRITE(ERR,98980)

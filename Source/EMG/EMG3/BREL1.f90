@@ -38,11 +38,12 @@
       USE IOUNT1, ONLY                :  WRT_ERR, ERR, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR
       USE TIMDAT, ONLY                :  TSEC
-      USE CONSTANTS_1, ONLY           :  TWO
+      USE CONSTANTS_1, ONLY           :  HALF, TWO, ZERO
       USE PARAMS, ONLY                :  EPSIL
       USE DEBUG_PARAMETERS
       USE MODEL_STUF, ONLY            :  EID, ELEM_LEN_AB, EMAT, NUM_EMG_FATAL_ERRS, EPROP, FCONV, ME, ULT_STRE, ULT_STRN, &
                                          TYPE, ZS
+      USE MODEL_STUF, ONLY            :  CBEAM_ACTIVE_NSTATIONS, CBEAM_ACTIVE_RPROPS, CBEAM_ACTIVE_XL
 
       USE BREL1_USE_IFs
 
@@ -70,11 +71,19 @@
       REAL(DOUBLE)                    :: NSM               ! Nonstructural mass
       REAL(DOUBLE)                    :: RHO               ! Material density
       REAL(DOUBLE)                    :: TREF              ! Element reference temperature
+      REAL(DOUBLE)                    :: CW                ! Warping coefficient
+      REAL(DOUBLE)                    :: DXI
+      REAL(DOUBLE)                    :: XI1
+      REAL(DOUBLE)                    :: XI2
+      INTEGER(LONG)                   :: ISTA
+      INTEGER(LONG)                   :: NSTA
 
 
 
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
+      NSM  = ZERO
+      CW   = ZERO
 
 ! Set element property and material constants
 
@@ -108,6 +117,54 @@
          FCONV(1) = AREA
 
       ELSE IF (TYPE == 'BEAM    ') THEN
+
+         AREA     = EPROP( 1)
+         I1       = EPROP( 2)
+         I2       = EPROP( 3)
+         I12      = EPROP( 4)
+         JTOR     = EPROP( 5)
+         NSM      = EPROP( 6)
+         ZS(1)    = EPROP( 7)
+         ZS(2)    = EPROP( 8)
+         ZS(3)    = EPROP( 9)
+         ZS(4)    = EPROP(10)
+         ZS(5)    = EPROP(11)
+         ZS(6)    = EPROP(12)
+         ZS(7)    = EPROP(13)
+         ZS(8)    = EPROP(14)
+         K1       = EPROP(30)
+         K2       = EPROP(31)
+         CW       = (EPROP(36) + EPROP(37))/TWO
+         ZS(9)    = ZERO
+         FCONV(1) = AREA
+         NSTA = CBEAM_ACTIVE_NSTATIONS
+         IF (NSTA > 1) THEN
+            AREA = ZERO
+            I1   = ZERO
+            I2   = ZERO
+            I12  = ZERO
+            JTOR = ZERO
+            NSM  = ZERO
+            DO ISTA=1,NSTA-1
+               XI1 = CBEAM_ACTIVE_XL(ISTA)
+               XI2 = CBEAM_ACTIVE_XL(ISTA+1)
+               DXI = XI2 - XI1
+               IF (DXI > EPS1) THEN
+                  AREA = AREA + HALF*DXI*(CBEAM_ACTIVE_RPROPS(ISTA,1) + CBEAM_ACTIVE_RPROPS(ISTA+1,1))
+                  I1   = I1   + HALF*DXI*(CBEAM_ACTIVE_RPROPS(ISTA,2) + CBEAM_ACTIVE_RPROPS(ISTA+1,2))
+                  I2   = I2   + HALF*DXI*(CBEAM_ACTIVE_RPROPS(ISTA,3) + CBEAM_ACTIVE_RPROPS(ISTA+1,3))
+                  I12  = I12  + HALF*DXI*(CBEAM_ACTIVE_RPROPS(ISTA,4) + CBEAM_ACTIVE_RPROPS(ISTA+1,4))
+                  JTOR = JTOR + HALF*DXI*(CBEAM_ACTIVE_RPROPS(ISTA,5) + CBEAM_ACTIVE_RPROPS(ISTA+1,5))
+                  NSM  = NSM  + HALF*DXI*(CBEAM_ACTIVE_RPROPS(ISTA,6) + CBEAM_ACTIVE_RPROPS(ISTA+1,6))
+               ENDIF
+            ENDDO
+            IF (AREA <= EPS1) AREA = EPROP(1)
+            IF (I1   <= EPS1) I1   = EPROP(2)
+            IF (I2   <= EPS1) I2   = EPROP(3)
+            IF (DABS(I12) <= EPS1) I12 = EPROP(4)
+            IF (JTOR <= EPS1) JTOR = EPROP(5)
+            FCONV(1) = AREA
+         ENDIF
 
       ENDIF
 
@@ -164,7 +221,7 @@
 
          ELSE IF (TYPE == 'BEAM    ') THEN                 ! General beam
 
-            CALL BEAM
+            CALL BEAM ( OPT, ELEM_LEN_AB, AREA, I1, I2, JTOR, CW, ZS(9), K1, K2, I12, E, G, ALPHA, TREF )
 
          ENDIF
 

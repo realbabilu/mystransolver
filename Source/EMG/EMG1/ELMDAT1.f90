@@ -60,6 +60,10 @@
                                          USERIN_MAT_NAMES, USERIN_NUM_BDY_DOF, USERIN_NUM_ACT_GRDS, USERIN_NUM_SPOINTS,            &
                                          USERIN_MASS_MAT_NAME, USERIN_LOAD_MAT_NAME, USERIN_RBM0_MAT_NAME, USERIN_STIF_MAT_NAME
 
+      USE MODEL_STUF, ONLY            :  CBEAM_ACTIVE_NSTATIONS, CBEAM_ACTIVE_XL, CBEAM_ACTIVE_RPROPS, PBEAM_NSTATIONS, PBEAM_XL,  &
+                                         PBEAM_RPROPS
+      USE SCONTR, ONLY                :  MPBEAM_STATIONS
+
       USE ELMDAT1_USE_IFs
 
       IMPLICIT NONE
@@ -76,6 +80,7 @@
 !                                                             row number in array EDAT where data begins for this element.
 
       INTEGER(LONG)                   :: IPNTR              ! Pointer into an array
+      INTEGER(LONG)                   :: ISTA               ! Loop index for active CBEAM station metadata
       INTEGER(LONG)                   :: VVEC_FLAG          ! Either actual grid ID for V vector or -IVVEC
 
       INTEGER(LONG)                   :: I,J                ! DO loop indices
@@ -116,6 +121,17 @@
       EID       = EDAT(EPNTK)
       INTL_PID  = EDAT(EPNTK+1)
 
+      CBEAM_ACTIVE_NSTATIONS = 0
+      DO ISTA=1,MPBEAM_STATIONS
+         CBEAM_ACTIVE_XL(ISTA) = ZERO
+         CBEAM_ACTIVE_RPROPS(ISTA,1) = ZERO
+         CBEAM_ACTIVE_RPROPS(ISTA,2) = ZERO
+         CBEAM_ACTIVE_RPROPS(ISTA,3) = ZERO
+         CBEAM_ACTIVE_RPROPS(ISTA,4) = ZERO
+         CBEAM_ACTIVE_RPROPS(ISTA,5) = ZERO
+         CBEAM_ACTIVE_RPROPS(ISTA,6) = ZERO
+      ENDDO
+
 ! ELGP is the number of G.P.'s for this elem. Call GET_ELGP to find out how many grids there are for elem type TYPE
 
       CALL GET_ELGP ( INT_ELEM_ID )
@@ -126,7 +142,9 @@
       IF (TYPE(1:6) /= 'USERIN') THEN
          DO J=1,METYPE
             IF (ELMTYP(J) == TYPE) THEN
-               IF (NUM_SEi(J) > (ELGP + 1)) THEN
+               IF ((TYPE == 'BEAM    ') .AND. (NUM_SEi(J) > 0)) THEN
+                  CONTINUE
+               ELSE IF (NUM_SEi(J) > (ELGP + 1)) THEN
                   WRITE(ERR,1957) SUBR_NAME, TYPE, NUM_SEi(J), ELGP
                   WRITE(F06,1957) SUBR_NAME, TYPE, NUM_SEi(J), ELGP
                   FATAL_ERR = FATAL_ERR + 1
@@ -327,6 +345,29 @@
          DO I=1,MRPBEAM
             EPROP(I) = RPBEAM(INTL_PID,I)
          ENDDO
+
+         CBEAM_ACTIVE_NSTATIONS = PBEAM_NSTATIONS(INTL_PID)
+         IF (CBEAM_ACTIVE_NSTATIONS > MPBEAM_STATIONS) CBEAM_ACTIVE_NSTATIONS = MPBEAM_STATIONS
+         IF (CBEAM_ACTIVE_NSTATIONS <= 1) THEN
+            CBEAM_ACTIVE_NSTATIONS = 1
+            CBEAM_ACTIVE_XL(1) = ZERO
+            CBEAM_ACTIVE_RPROPS(1,1) = EPROP(1)
+            CBEAM_ACTIVE_RPROPS(1,2) = EPROP(2)
+            CBEAM_ACTIVE_RPROPS(1,3) = EPROP(3)
+            CBEAM_ACTIVE_RPROPS(1,4) = EPROP(4)
+            CBEAM_ACTIVE_RPROPS(1,5) = EPROP(5)
+            CBEAM_ACTIVE_RPROPS(1,6) = EPROP(6)
+         ELSE
+            DO ISTA=1,CBEAM_ACTIVE_NSTATIONS
+               CBEAM_ACTIVE_XL(ISTA) = PBEAM_XL(INTL_PID,ISTA)
+               CBEAM_ACTIVE_RPROPS(ISTA,1) = PBEAM_RPROPS(INTL_PID,ISTA,1)
+               CBEAM_ACTIVE_RPROPS(ISTA,2) = PBEAM_RPROPS(INTL_PID,ISTA,2)
+               CBEAM_ACTIVE_RPROPS(ISTA,3) = PBEAM_RPROPS(INTL_PID,ISTA,3)
+               CBEAM_ACTIVE_RPROPS(ISTA,4) = PBEAM_RPROPS(INTL_PID,ISTA,4)
+               CBEAM_ACTIVE_RPROPS(ISTA,5) = PBEAM_RPROPS(INTL_PID,ISTA,5)
+               CBEAM_ACTIVE_RPROPS(ISTA,6) = PBEAM_RPROPS(INTL_PID,ISTA,6)
+            ENDDO
+         ENDIF
 
       ELSE IF (TYPE == 'BUSH    ') THEN
          DO I=1,MRPBUSH
